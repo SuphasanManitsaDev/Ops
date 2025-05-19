@@ -72,13 +72,17 @@ path "secret/data/myapp/*" {
 }
 ```
 
-จากนั้นเขียนเข้า Vault:
+เขียนเข้า Vault:
 
 ```bash
 vault policy write myapp-policy myapp-policy.hcl
 ```
 
-✅ สิทธิ์ที่กำหนด: ให้สามารถทำทุกอย่างกับ secret/data/myapp/*
+### 🔍 ตัวอย่างผลลัพธ์
+
+```
+Success! Uploaded policy: myapp-policy
+```
 
 ---
 
@@ -88,7 +92,13 @@ vault policy write myapp-policy myapp-policy.hcl
 vault auth enable approle
 ```
 
-สร้าง Role และผูกกับ policy:
+### 🔍 ตัวอย่างผลลัพธ์
+
+```
+Success! Enabled approle auth method at: approle/
+```
+
+สร้าง Role:
 
 ```bash
 vault write auth/approle/role/myapp-role \
@@ -97,14 +107,34 @@ vault write auth/approle/role/myapp-role \
   token_max_ttl=4h
 ```
 
+### 🔍 ตัวอย่างผลลัพธ์
+
+```
+Success! Data written to: auth/approle/role/myapp-role
+```
+
 ---
 
 ## 🆔 6. ดึง Role ID และสร้าง Secret ID
 
 ```bash
 vault read auth/approle/role/myapp-role/role-id
+```
 
+```
+Key        Value
+---        -----
+role_id    1a2b3c4d-xxxx-yyyy-zzzz-123456789abc
+```
+
+```bash
 vault write -f auth/approle/role/myapp-role/secret-id
+```
+
+```
+Key                   Value
+---                   -----
+secret_id             8d7e6f5a-bbbb-cccc-dddd-9876543210ef
 ```
 
 ---
@@ -113,21 +143,44 @@ vault write -f auth/approle/role/myapp-role/secret-id
 
 ```bash
 vault write auth/approle/login \
-  role_id="<role_id>" \
-  secret_id="<secret_id>"
+  role_id="1a2b3c4d-xxxx-yyyy-zzzz-123456789abc" \
+  secret_id="8d7e6f5a-bbbb-cccc-dddd-9876543210ef"
 ```
 
-ผลลัพธ์: จะได้ Token (`client_token`) สำหรับใช้งาน
+### 🔍 ตัวอย่างผลลัพธ์
+
+```json
+{
+  "auth": {
+    "client_token": "s.abc123xyz456",
+    "policies": ["myapp-policy"],
+    "lease_duration": 3600
+  }
+}
+```
 
 ---
 
 ## ✅ 8. ใช้ Token เพื่อเข้าถึง Secret
 
 ```bash
-export VAULT_TOKEN=s.xxxxxx
+export VAULT_TOKEN=s.abc123xyz456
 
 vault kv put secret/myapp/demo foo=bar
 vault kv get secret/myapp/demo
+```
+
+### 🔍 ตัวอย่างผลลัพธ์
+
+```
+====== Metadata ======
+created_time     2025-05-19T10:05:00Z
+version          1
+
+====== Data ======
+Key     Value
+---     -----
+foo     bar
 ```
 
 ---
@@ -138,12 +191,23 @@ vault kv get secret/myapp/demo
 vault token renew
 ```
 
+```
+Key              Value
+---              -----
+token            s.abc123xyz456
+ttl              1h
+```
+
 ---
 
 ## 🚫 10. ยกเลิก Token
 
 ```bash
-vault token revoke s.xxxxxx
+vault token revoke s.abc123xyz456
+```
+
+```
+Success! Revoked token (if it existed)
 ```
 
 ---
@@ -154,10 +218,24 @@ vault token revoke s.xxxxxx
 vault policy list
 ```
 
+```
+default
+myapp-policy
+root
+```
+
+---
+
 ## 🧾 12. อ่านเนื้อหา policy
 
 ```bash
 vault policy read myapp-policy
+```
+
+```
+path "secret/data/myapp/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
 ```
 
 ---
