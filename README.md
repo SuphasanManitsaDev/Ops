@@ -76,9 +76,9 @@ foo     bar
 สร้างไฟล์ชื่อ `myapp-policy.hcl`:
 
 ```hcl
-path "secret/data/myapp/*" {
+echo 'path "secret/data/myapp/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
-}
+}' > myapp-policy.hcl
 ```
 
 เขียนเข้า Vault:
