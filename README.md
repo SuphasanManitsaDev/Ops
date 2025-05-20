@@ -4,6 +4,15 @@
 
 ---
 
+## 📦 0. Export Path
+
+```bash
+export VAULT_ADDR='http://localhost:8200'
+export VAULT_TOKEN='root-token'
+```
+
+### 🔍 ตัวอย่างผลลัพธ์
+
 ## 📦 1. ดูว่า Vault มี Secret Engine อะไรอยู่บ้าง
 
 ```bash
